@@ -83,6 +83,9 @@ var (
 	OIDEncryptionAlgorithmAES128GCM  = asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 1, 6}
 	OIDEncryptionAlgorithmAES128CBC  = asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 1, 2}
 	OIDEncryptionAlgorithmAES256GCM  = asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 1, 46}
+
+	// Extended
+	OIDEncryptionAlgorithmRSAPSS = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 10}
 )
 
 func getHashForOID(oid asn1.ObjectIdentifier) (crypto.Hash, error) {
@@ -119,7 +122,10 @@ func getDigestOIDForSignatureAlgorithm(digestAlg x509.SignatureAlgorithm) (asn1.
 
 // getOIDForEncryptionAlgorithm takes a private key or signer and
 // the OID of a digest algorithm to return the appropriate signerInfo.DigestEncryptionAlgorithm
-func getOIDForEncryptionAlgorithm(keyOrSigner interface{}, OIDDigestAlg asn1.ObjectIdentifier) (asn1.ObjectIdentifier, error) {
+func getOIDForEncryptionAlgorithm(
+	keyOrSigner interface{},
+	OIDDigestAlg asn1.ObjectIdentifier,
+) (asn1.ObjectIdentifier, error) {
 	_, ok := keyOrSigner.(*dsa.PrivateKey)
 	if ok {
 		return OIDDigestAlgorithmDSA, nil
