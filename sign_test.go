@@ -9,7 +9,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"os"
 	"os/exec"
@@ -48,14 +47,13 @@ func TestSign(t *testing.T) {
 					t.Fatalf("test %s/%s/%s: cannot generate signer cert: %s", sigalgroot, sigalginter, sigalgsigner, err)
 				}
 				for _, testDetach := range []bool{false, true} {
-					log.Printf("test %s/%s/%s detached %t\n", sigalgroot, sigalginter, sigalgsigner, testDetach)
 					toBeSigned, err := NewSignedData(content)
 					if err != nil {
 						t.Fatalf("test %s/%s/%s: cannot initialize signed data: %s", sigalgroot, sigalginter, sigalgsigner, err)
 					}
 
 					// Set the digest to match the end entity cert
-					signerDigest, _ := getDigestOIDForSignatureAlgorithm(signerCert.Certificate.SignatureAlgorithm)
+					signerDigest, _ := GetDigestOIDForSignatureAlgorithm(signerCert.Certificate.SignatureAlgorithm)
 					toBeSigned.SetDigestAlgorithm(signerDigest)
 
 					if err := toBeSigned.AddSignerChain(signerCert.Certificate, *signerCert.PrivateKey, parents, SignerInfoConfig{}); err != nil {
@@ -68,7 +66,6 @@ func TestSign(t *testing.T) {
 					if err != nil {
 						t.Fatalf("test %s/%s/%s: cannot finish signing data: %s", sigalgroot, sigalginter, sigalgsigner, err)
 					}
-					pem.Encode(os.Stdout, &pem.Block{Type: "PKCS7", Bytes: signed})
 					p7, err := Parse(signed)
 					if err != nil {
 						t.Fatalf("test %s/%s/%s: cannot parse signed data: %s", sigalgroot, sigalginter, sigalgsigner, err)
@@ -183,14 +180,13 @@ func TestSignWithoutAttributes(t *testing.T) {
 				t.Fatalf("test %s/%s: cannot generate signer cert: %s", sigalgroot, sigalgsigner, err)
 			}
 			for _, testDetach := range []bool{false, true} {
-				log.Printf("test %s/%s/%s detached %t\n", sigalgroot, sigalgroot, sigalgsigner, testDetach)
 				toBeSigned, err := NewSignedData(content)
 				if err != nil {
 					t.Fatalf("test %s/%s: cannot initialize signed data: %s", sigalgroot, sigalgsigner, err)
 				}
 
 				// Set the digest to match the end entity cert
-				signerDigest, _ := getDigestOIDForSignatureAlgorithm(signerCert.Certificate.SignatureAlgorithm)
+				signerDigest, _ := GetDigestOIDForSignatureAlgorithm(signerCert.Certificate.SignatureAlgorithm)
 				toBeSigned.SetDigestAlgorithm(signerDigest)
 
 				if err := toBeSigned.SignWithoutAttr(signerCert.Certificate, (*signerCert.PrivateKey).(crypto.Signer), SignerInfoConfig{}); err != nil {
@@ -203,7 +199,6 @@ func TestSignWithoutAttributes(t *testing.T) {
 				if err != nil {
 					t.Fatalf("test %s/%s: cannot finish signing data: %s", sigalgroot, sigalgsigner, err)
 				}
-				pem.Encode(os.Stdout, &pem.Block{Type: "PKCS7", Bytes: signed})
 				p7, err := Parse(signed)
 				if err != nil {
 					t.Fatalf("test %s/%s: cannot parse signed data: %s", sigalgroot, sigalgsigner, err)
@@ -249,11 +244,10 @@ func ExampleSignedData() {
 	signedData.Detach()
 
 	// Finish() to obtain the signature bytes
-	detachedSignature, err := signedData.Finish()
+	_, err = signedData.Finish()
 	if err != nil {
 		fmt.Printf("Cannot finish signing data: %s", err)
 	}
-	pem.Encode(os.Stdout, &pem.Block{Type: "PKCS7", Bytes: detachedSignature})
 }
 
 func TestSetContentType(t *testing.T) {
@@ -330,7 +324,6 @@ func TestDegenerateCertificate(t *testing.T) {
 		t.Fatal(err)
 	}
 	testOpenSSLParse(t, deg)
-	pem.Encode(os.Stdout, &pem.Block{Type: "PKCS7", Bytes: deg})
 }
 
 func TestSkipCertificates(t *testing.T) {
